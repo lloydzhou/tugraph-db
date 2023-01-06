@@ -25,7 +25,19 @@
 #include "lgraph/lgraph.h"
 #include "plugin/plugin_context.h"
 
+#include "antlr4-runtime.h"
+
+#include "cypher/execution_plan/execution_plan.h"
+#include "cypher/execution_plan/scheduler.h"
+#include "cypher/parser/generated/LcypherLexer.h"
+#include "cypher/parser/generated/LcypherParser.h"
+#include "cypher/parser/cypher_base_visitor.h"
+#include "cypher/parser/cypher_error_listener.h"
+
 #if LGRAPH_ENABLE_PYTHON_PLUGIN
+
+using namespace parser;
+using namespace antlr4;
 
 namespace lgraph_api {
 namespace python {
@@ -334,6 +346,30 @@ void register_python_api(pybind11::module& m) {
                "Validate the given user and set current user given in the user.",
                pybind11::arg("user"));
     galaxy.def("Close", &Galaxy::Close, "Closes this galaxy")
+        .def("Cypher", [](Galaxy& g, std::string &graph, std::string &script){
+                // eval cypher script
+               cypher::RTContext ctx(nullptr, g,
+                   g->GetUserToken(lgraph::_detail::DEFAULT_ADMIN_NAME,
+                                   ::_detail::DEFAULT_ADMIN_PASS),
+                   lgraph::_detail::DEFAULT_ADMIN_NAME, graph,
+                   lgraph::AclManager::FieldAccess());
+               ANTLRInputStream input(script);
+               LcypherLexer lexer(&input);
+               CommonTokenStream tokens(&lexer);
+               LcypherParser parser(&tokens);
+               parser.addErrorListener(&CypherErrorListener::INSTANCE);
+               CypherBaseVisitor visitor(parser.oC_Cypher());
+               cypher::ExecutionPlan execution_plan;
+               execution_plan.Build(visitor.GetQuery(), visitor.CommandType());
+               execution_plan.Validate(ctx);
+               execution_plan.DumpGraph();
+               execution_plan.DumpPlan(0, false);
+               execution_plan.Execute(ctx);
+               // UT_LOG() << "Result:\n" << ctx->result_->Dump(false);
+               return 1;
+             },
+             "Eval Cypher.",
+             pybind11::arg("script"))
         .def("CreateGraph", &Galaxy::CreateGraph,
              "Creates a graph.\n"
              "name: the name of the graph\n"
