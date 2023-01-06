@@ -70,14 +70,6 @@ std::string lgraph_api::Galaxy::Cypher(const std::string& graph, const std::stri
     CypherBaseVisitor visitor(parser.oC_Cypher());
     cypher::ExecutionPlan execution_plan;
     execution_plan.Build(visitor.GetQuery(), visitor.CommandType());
-    ANTLRInputStream input(script);
-    LcypherLexer lexer(&input);
-    CommonTokenStream tokens(&lexer);
-    LcypherParser parser(&tokens);
-    parser.addErrorListener(&CypherErrorListener::INSTANCE);
-    CypherBaseVisitor visitor(parser.oC_Cypher());
-    cypher::ExecutionPlan execution_plan;
-    execution_plan.Build(visitor.GetQuery(), visitor.CommandType());
     execution_plan.Validate(ctx);
     execution_plan.DumpGraph();
     execution_plan.DumpPlan(0, false);
