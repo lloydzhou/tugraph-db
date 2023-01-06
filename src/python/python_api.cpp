@@ -25,19 +25,7 @@
 #include "lgraph/lgraph.h"
 #include "plugin/plugin_context.h"
 
-#include "antlr4-runtime.h"
-
-#include "cypher/execution_plan/execution_plan.h"
-#include "cypher/execution_plan/scheduler.h"
-#include "cypher/parser/generated/LcypherLexer.h"
-#include "cypher/parser/generated/LcypherParser.h"
-#include "cypher/parser/cypher_base_visitor.h"
-#include "cypher/parser/cypher_error_listener.h"
-
 #if LGRAPH_ENABLE_PYTHON_PLUGIN
-
-using namespace parser;
-using namespace antlr4;
 
 namespace lgraph_api {
 namespace python {
