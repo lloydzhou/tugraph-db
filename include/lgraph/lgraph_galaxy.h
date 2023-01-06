@@ -23,6 +23,7 @@ namespace lgraph_api {
  */
 class Galaxy {
     std::string user_;
+    std::string token_;
     lgraph::Galaxy* db_;
 
     explicit Galaxy(lgraph::Galaxy* db);
@@ -445,6 +446,8 @@ class Galaxy {
      * @returns A GraphDB.
      */
     GraphDB OpenGraph(const std::string& graph, bool read_only = false) const;
+
+    std::string Cypher(const std::string& graph, const std::string& script);
 
     /** @brief   Closes this Galaxy, turning it into an invalid state. */
     void Close();

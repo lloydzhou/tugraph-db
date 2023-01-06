@@ -54,9 +54,35 @@ lgraph_api::Galaxy::~Galaxy() { Close(); }
 
 void lgraph_api::Galaxy::SetCurrentUser(const std::string& user, const std::string& password) {
     CHECK_DB_NOT_NULL();
-    std::string token = db_->GetUserToken(user, password);
-    if (token.empty()) throw lgraph_api::UnauthorizedError("Bad user/password.");
+    token_ = db_->GetUserToken(user, password);
+    if (token_.empty()) throw lgraph_api::UnauthorizedError("Bad user/password.");
     user_ = user;
+}
+
+std::string lgraph_api::Galaxy::Cypher(const std::string& graph, const std::string& script) {
+    CHECK_DB_AND_USER();
+    cypher::RTContext ctx(nullptr, db_, token_, user_, graph, lgraph::AclManager::FieldAccess());
+    ANTLRInputStream input(script);
+    LcypherLexer lexer(&input);
+    CommonTokenStream tokens(&lexer);
+    LcypherParser parser(&tokens);
+    parser.addErrorListener(&CypherErrorListener::INSTANCE);
+    CypherBaseVisitor visitor(parser.oC_Cypher());
+    cypher::ExecutionPlan execution_plan;
+    execution_plan.Build(visitor.GetQuery(), visitor.CommandType());
+    ANTLRInputStream input(script);
+    LcypherLexer lexer(&input);
+    CommonTokenStream tokens(&lexer);
+    LcypherParser parser(&tokens);
+    parser.addErrorListener(&CypherErrorListener::INSTANCE);
+    CypherBaseVisitor visitor(parser.oC_Cypher());
+    cypher::ExecutionPlan execution_plan;
+    execution_plan.Build(visitor.GetQuery(), visitor.CommandType());
+    execution_plan.Validate(ctx);
+    execution_plan.DumpGraph();
+    execution_plan.DumpPlan(0, false);
+    execution_plan.Execute(ctx);
+    return ctx->result_->Dump(false)
 }
 
 void lgraph_api::Galaxy::SetUser(const std::string& user) {
