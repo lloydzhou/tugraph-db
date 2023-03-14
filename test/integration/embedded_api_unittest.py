@@ -3,7 +3,7 @@
 import math
 import datetime
 
-from lgraph_python import *
+from liblgraph_python_api import *
 
 
 class ExceptionWasNotThrown(Exception):
@@ -21,7 +21,7 @@ except Exception as e:
     '''.format(code), glbs, lcls)
 
 
-class LGraphUnitTests():
+class LGraphUnitTests:
 
     def test_field_data(self):
         assert (FieldData(11) == 11)
@@ -53,6 +53,10 @@ class LGraphUnitTests():
     def test_db(self):
         with Galaxy("./testdb", True, True) as galaxy:
             galaxy.SetCurrentUser("admin", "73@TuGraph")
+            res = galaxy.Cypher("default", "match(a) return a")
+            print("test Cypher")
+            print(res)
+
             with galaxy.OpenGraph("default") as db:
                 db.DropAllData()
                 lv_0 = "person"
